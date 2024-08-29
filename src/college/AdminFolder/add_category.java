@@ -13,6 +13,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.JOptionPane;
@@ -152,14 +154,18 @@ public class add_category extends javax.swing.JFrame {
         return;
     }
 
-    // Check if category_title already exists
-    try {
-        // Establish connection
-        Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/universityproject", "root", "");
+                Connection connect = null;
+		Statement s = null;
+		Boolean status = false;
+        try {  
+            Class.forName("com.mysql.jdbc.Driver");
+            String myUrl = "jdbc:mysql://localhost:3305/universityproject";
+            connect = DriverManager.getConnection(myUrl, "root", "");
+            s = connect.createStatement();
 
         // Check if the category title already exists
         String checkQuery = "SELECT * FROM category WHERE category_title = ?";
-        PreparedStatement checkStmt = con.prepareStatement(checkQuery);
+        PreparedStatement checkStmt = connect.prepareStatement(checkQuery);
         checkStmt.setString(1, categoryTitle);
         ResultSet rs = checkStmt.executeQuery();
 
@@ -169,7 +175,7 @@ public class add_category extends javax.swing.JFrame {
         } else {
             // Insert new category
             String insertQuery = "INSERT INTO category (category_title, category_quantity) VALUES (?, ?)";
-            PreparedStatement insertStmt = con.prepareStatement(insertQuery);
+            PreparedStatement insertStmt = connect.prepareStatement(insertQuery);
             insertStmt.setString(1, categoryTitle);
             insertStmt.setString(2, categoryQuantity);
             insertStmt.executeUpdate();
@@ -191,10 +197,12 @@ public class add_category extends javax.swing.JFrame {
         // Close resources
         rs.close();
         checkStmt.close();
-        con.close();
+        connect.close();
     } catch (SQLException e) {
         JOptionPane.showMessageDialog(this, "Error in database operation: " + e.getMessage());
-    }
+    }   catch (ClassNotFoundException ex) {
+            Logger.getLogger(add_category.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_addcategoryActionPerformed
 
     /**

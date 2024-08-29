@@ -17,6 +17,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.JOptionPane;
@@ -269,61 +271,81 @@ public class add_product extends javax.swing.JFrame {
     }//GEN-LAST:event_categoryboxActionPerformed
     
      private void loadCategories() {
-       try {
-            Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/universityproject", "root", "");
-            String query = "SELECT * FROM category";
-            PreparedStatement pst = con.prepareStatement(query);
-            ResultSet rs = pst.executeQuery();
+categorybox.removeAllItems();
 
-            while (rs.next()) {
-                int id = rs.getInt("category_id");
-                String name = rs.getString("category_title");
-                categorybox.addItem(new CategoryItem(id, name));
-            }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Error loading categories: " + e.getMessage());
+    try (Connection connect = DriverManager.getConnection("jdbc:mysql://localhost:3305/universityproject", "root", "");
+         Statement s = connect.createStatement();
+         PreparedStatement pst = connect.prepareStatement("SELECT * FROM category");
+         ResultSet rs = pst.executeQuery()) {
+
+        while (rs.next()) {
+            int id = rs.getInt("category_id");
+            String name = rs.getString("category_title");
+            categorybox.addItem(new CategoryItem(id, name));
         }
+
+    } catch (SQLException e) {
+        JOptionPane.showMessageDialog(this, "Error loading categories: " + e.getMessage());
+    }
     }
 
     
     private void addActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addActionPerformed
-     String title = producttitle.getText();
-        String description = productdescription.getText();
-        String stockStr = productstock.getText();
-        String keywords = productkeywords.getText();
-        CategoryItem selectedCategory = (CategoryItem) categorybox.getSelectedItem();
-        String priceStr = productprice.getText();
+   String title = producttitle.getText();
+    String description = productdescription.getText();
+    String stockStr = productstock.getText();
+    String keywords = productkeywords.getText();
+    CategoryItem selectedCategory = (CategoryItem) categorybox.getSelectedItem();
+    String priceStr = productprice.getText();
 
-        // Input validation
-        if (title.isEmpty() || description.isEmpty() || stockStr.isEmpty() || keywords.isEmpty() || priceStr.isEmpty() || selectedCategory == null) {
-            JOptionPane.showMessageDialog(this, "Please fill in all fields.");
-            return;
+    // Input validation
+    if (title.isEmpty() || description.isEmpty() || stockStr.isEmpty() || keywords.isEmpty() || priceStr.isEmpty() || selectedCategory == null) {
+        JOptionPane.showMessageDialog(this, "Please fill in all fields.");
+        return;
+    }
+
+    try (Connection connect = DriverManager.getConnection("jdbc:mysql://localhost:3305/universityproject", "root", "");
+         PreparedStatement pst = connect.prepareStatement(
+                 "INSERT INTO product (product_title, product_description, product_stock, product_keywords, category_id, product_price) " +
+                 "VALUES (?, ?, ?, ?, ?, ?)")) {
+
+        int stock = Integer.parseInt(stockStr);
+        double price = Double.parseDouble(priceStr);
+
+        pst.setString(1, title);
+        pst.setString(2, description);
+        pst.setInt(3, stock);
+        pst.setString(4, keywords);
+        pst.setInt(5, selectedCategory.getId());
+        pst.setDouble(6, price);
+
+        int rowsAffected = pst.executeUpdate();
+        if (rowsAffected > 0) {
+            JOptionPane.showMessageDialog(this, "Product added successfully.");
+            clearFields();
+
+            // Open the add_product window
+            add_product new_product = new add_product();
+            new_product.setLocationRelativeTo(this);
+            new_product.setVisible(true);
+            
+            // Add WindowListener to refresh view when the new_product window is closed
+            new_product.addWindowListener(new java.awt.event.WindowAdapter() {
+                @Override
+                public void windowClosed(java.awt.event.WindowEvent evt) {
+                    viewActionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, "view"));
+                }
+            });
+
+        } else {
+            JOptionPane.showMessageDialog(this, "Failed to add product.");
         }
 
-        try {
-            int stock = Integer.parseInt(stockStr);
-            double price = Double.parseDouble(priceStr);
-
-            Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/universityproject", "root", "");
-            String query = "INSERT INTO product (product_title, product_description, product_stock, product_keywords, category_id, product_price) VALUES (?, ?, ?, ?, ?, ?)";
-            PreparedStatement pst = con.prepareStatement(query);
-            pst.setString(1, title);
-            pst.setString(2, description);
-            pst.setInt(3, stock);
-            pst.setString(4, keywords);
-            pst.setInt(5, selectedCategory.getId());
-            pst.setDouble(6, price);
-
-            int rowsAffected = pst.executeUpdate();
-            if (rowsAffected > 0) {
-                JOptionPane.showMessageDialog(this, "Product added successfully.");
-                clearFields();
-            } else {
-                JOptionPane.showMessageDialog(this, "Failed to add product.");
-            }
-        } catch (SQLException | NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage());
-        }
+    } catch (SQLException ex) {
+        JOptionPane.showMessageDialog(this, "Database Error: " + ex.getMessage());
+    } catch (NumberFormatException ex) {
+        JOptionPane.showMessageDialog(this, "Invalid number format: " + ex.getMessage());
+    }
     }//GEN-LAST:event_addActionPerformed
 
        private void clearFields() {
@@ -334,8 +356,53 @@ public class add_product extends javax.swing.JFrame {
         productprice.setText("");
         categorybox.setSelectedIndex(-1);
     }
+
+    private void viewActionPerformed(Object object) {
+//        try (Connection connect = DriverManager.getConnection("jdbc:mysql://localhost:3305/universityproject", "root", "");
+//         Statement s = connect.createStatement()) {
+//
+//        // Retrieve product data
+//        String productQuery = "SELECT * FROM product;";
+//        try (ResultSet productRs = s.executeQuery(productQuery)) {
+//
+//            // Clear table before populating
+//            DefaultTableModel model = (DefaultTableModel) productstable.getModel();
+//            model.setRowCount(0); // Clearing the existing rows
+//
+//            // Process each product and retrieve category name
+//            while (productRs.next()) {
+//                String id = productRs.getString("product_id");
+//                String title = productRs.getString("product_title");
+//                String description = productRs.getString("product_description");
+//                String stock = productRs.getString("product_stock");
+//                String keyword = productRs.getString("product_keywords");
+//                String categoryId = productRs.getString("category_id");
+//                String image1 = productRs.getString("product_image1");
+//                String image2 = productRs.getString("product_image2");
+//                String image3 = productRs.getString("product_image3");
+//                String price = productRs.getString("product_price");
+//
+//                // Retrieve category name based on category_id
+//                String category = "";
+//                String categoryQuery = "SELECT category_title FROM category WHERE category_id = ?";
+//                try (PreparedStatement categoryStmt = connect.prepareStatement(categoryQuery)) {
+//                    categoryStmt.setString(1, categoryId);
+//                    try (ResultSet categoryRs = categoryStmt.executeQuery()) {
+//                        if (categoryRs.next()) {
+//                            category = categoryRs.getString("category_title");
+//                        }
+//                    }
+//                }
+//
+//                // Add row to the table model
+//                model.addRow(new Object[]{id, title, description, stock, keyword, category, image1, image2, image3, price});
+//            }
+//        }
+//    } catch (SQLException e) {
+//        JOptionPane.showMessageDialog(this, "Error fetching data: " + e.getMessage());
+//    }
     
-       
+    }
    class CategoryItem {
     private int id;
     private String name;

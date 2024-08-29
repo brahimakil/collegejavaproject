@@ -179,13 +179,17 @@ public class category_page extends javax.swing.JFrame {
     }//GEN-LAST:event_addcategoryActionPerformed
 
     private void viewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_viewActionPerformed
-        try {
-        // Establish connection  
-        Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/universityproject", "root", "");  
-        Statement statement = con.createStatement(); 
+                 Connection connect = null;
+		Statement s = null;
+		Boolean status = false;
+        try {  
+            Class.forName("com.mysql.jdbc.Driver");
+            String myUrl = "jdbc:mysql://localhost:3305/universityproject";
+            connect = DriverManager.getConnection(myUrl, "root", "");
+            s = connect.createStatement();
 
         String query = "SELECT * FROM category;";
-        ResultSet rs = statement.executeQuery(query);
+        ResultSet rs = s.executeQuery(query);
 
         // Clear table before populating
         DefaultTableModel model = (DefaultTableModel) categorytable.getModel();
@@ -201,7 +205,7 @@ public class category_page extends javax.swing.JFrame {
             model.addRow(new Object[] { id, title, quantity  });
         } 
         rs.close();
-        con.close();
+        connect.close();
     } catch (SQLException ex) {
          JOptionPane.showMessageDialog(this, "Could Not add");
 
@@ -216,23 +220,26 @@ public class category_page extends javax.swing.JFrame {
     }//GEN-LAST:event_hoempageActionPerformed
 
     private void deleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteActionPerformed
-               
+                Connection connect = null;
+		Statement s = null;
+		Boolean status = false;
         try {  
-        Class.forName("com.mysql.jdbc.Driver");  
-        // establish connection  
-        Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/universityproject", "root", "");  
+            Class.forName("com.mysql.jdbc.Driver");
+            String myUrl = "jdbc:mysql://localhost:3305/universityproject";
+            connect = DriverManager.getConnection(myUrl, "root", "");
+            s = connect.createStatement();
 
         // Check if the roll number exists
         String rollNumber = jTextField1.getText();
         String checkQuery = "SELECT * FROM category WHERE category_id = ?";
-        PreparedStatement checkStmt = con.prepareStatement(checkQuery);
+        PreparedStatement checkStmt = connect.prepareStatement(checkQuery);
         checkStmt.setString(1, rollNumber);
         ResultSet rs = checkStmt.executeQuery();
         
         if (rs.next()) {
             // Roll number found, proceed with delete
             String deleteQuery = "DELETE FROM category WHERE category_id = ?";
-            PreparedStatement deleteStmt = con.prepareStatement(deleteQuery);
+            PreparedStatement deleteStmt = connect.prepareStatement(deleteQuery);
             deleteStmt.setString(1, rollNumber);
             deleteStmt.executeUpdate();
             JOptionPane.showMessageDialog(null, "Record deleted successfully.");
@@ -248,7 +255,7 @@ public class category_page extends javax.swing.JFrame {
         // Close the ResultSet, PreparedStatement, and Connection
         rs.close();
         checkStmt.close();
-        con.close();  
+        connect.close();  
     } catch (SQLException | ClassNotFoundException e) {  
         JOptionPane.showMessageDialog(null, e);  
     } 

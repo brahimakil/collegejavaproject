@@ -13,6 +13,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.JOptionPane;
@@ -218,9 +220,10 @@ public class add_user extends javax.swing.JFrame {
     PreparedStatement pst = null;
     ResultSet rs = null;
 
-    try {
-        // Establish the connection to the database
-        conn = DriverManager.getConnection("jdbc:mysql://localhost/universityproject", "root", "");
+       try {  
+            Class.forName("com.mysql.jdbc.Driver");
+            String myUrl = "jdbc:mysql://localhost:3305/universityproject";
+            conn = DriverManager.getConnection(myUrl, "root", "");
 
         // Check if the email already exists in the database
         String queryCheckEmail = "SELECT * FROM user WHERE user_email = ?";
@@ -253,7 +256,9 @@ public class add_user extends javax.swing.JFrame {
 
     } catch (SQLException ex) {
         JOptionPane.showMessageDialog(this, "An error occurred while adding the user: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-    } finally {
+    }   catch (ClassNotFoundException ex) {
+            Logger.getLogger(add_user.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
         // Close the resources
         try {
             if (rs != null) rs.close();

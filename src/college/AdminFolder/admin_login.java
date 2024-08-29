@@ -135,10 +135,14 @@ public class admin_login extends javax.swing.JFrame {
     private void loginbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loginbuttonActionPerformed
       
         
+                 Connection connect = null;
+		Statement s = null;
+		Boolean status = false;
         try {  
-       Class.forName("com.mysql.cj.jdbc.Driver");
-       Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/universityproject", "root", "");  
-        Statement statement = con.createStatement();  
+            Class.forName("com.mysql.jdbc.Driver");
+            String myUrl = "jdbc:mysql://localhost:3305/universityproject";
+            connect = DriverManager.getConnection(myUrl, "root", "");
+            s = connect.createStatement();
 
         String email = emailfield.getText();
         String password = passwordfield.getText();
@@ -146,7 +150,7 @@ public class admin_login extends javax.swing.JFrame {
         if (email.isEmpty() || password.isEmpty()) {
             JOptionPane.showMessageDialog(null, "Email and password must be filled out.");
         } else {
-            ResultSet rs = statement.executeQuery("SELECT * FROM admin WHERE admin_email = '" + email + "' AND admin_password = '" + password + "'");
+            ResultSet rs = s.executeQuery("SELECT * FROM admin WHERE admin_email = '" + email + "' AND admin_password = '" + password + "'");
 
             if (rs.next()) {
            
@@ -165,8 +169,8 @@ public class admin_login extends javax.swing.JFrame {
             rs.close();
         }
 
-        statement.close();
-        con.close();  
+        s.close();
+        connect.close();  
     } catch (SQLException | ClassNotFoundException e) {  
         JOptionPane.showMessageDialog(null, e);  
     }  

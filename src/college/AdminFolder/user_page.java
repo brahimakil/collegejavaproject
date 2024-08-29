@@ -170,13 +170,17 @@ public class user_page extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void viewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_viewActionPerformed
-               try {
-    // Establish connection  
-    Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/universityproject", "root", "");  
-    Statement statement = con.createStatement(); 
+                 Connection connect = null;
+		Statement s = null;
+		Boolean status = false;
+        try {  
+            Class.forName("com.mysql.jdbc.Driver");
+            String myUrl = "jdbc:mysql://localhost:3305/universityproject";
+            connect = DriverManager.getConnection(myUrl, "root", "");
+            s = connect.createStatement();
        
     String query = "SELECT * FROM user;";
-    ResultSet rs = statement.executeQuery(query);
+    ResultSet rs = s.executeQuery(query);
     
     // Clear table before populating
     DefaultTableModel model = (DefaultTableModel) usertable.getModel();
@@ -194,7 +198,7 @@ public class user_page extends javax.swing.JFrame {
         model.addRow(new Object[] { id,  name, email, phone  });
     } 
     rs.close();
-    con.close();
+    connect.close();
 } catch (SQLException ex) {
      JOptionPane.showMessageDialog(this, "Could Not add");
 
@@ -204,22 +208,26 @@ public class user_page extends javax.swing.JFrame {
     }//GEN-LAST:event_viewActionPerformed
 
     private void deletebuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deletebuttonActionPerformed
-          try {  
-        Class.forName("com.mysql.jdbc.Driver");  
-        // establish connection  
-        Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/universityproject", "root", "");  
+                Connection connect = null;
+		Statement s = null;
+		Boolean status = false;
+        try {  
+            Class.forName("com.mysql.jdbc.Driver");
+            String myUrl = "jdbc:mysql://localhost:3305/universityproject";
+            connect = DriverManager.getConnection(myUrl, "root", "");
+            s = connect.createStatement();
 
         // Check if the roll number exists
         String rollNumber = deletefield.getText();
         String checkQuery = "SELECT * FROM user WHERE user_id = ?";
-        PreparedStatement checkStmt = con.prepareStatement(checkQuery);
+        PreparedStatement checkStmt = connect.prepareStatement(checkQuery);
         checkStmt.setString(1, rollNumber);
         ResultSet rs = checkStmt.executeQuery();
         
         if (rs.next()) {
             // Roll number found, proceed with delete
             String deleteQuery = "DELETE FROM user WHERE user_id = ?";
-            PreparedStatement deleteStmt = con.prepareStatement(deleteQuery);
+            PreparedStatement deleteStmt = connect.prepareStatement(deleteQuery);
             deleteStmt.setString(1, rollNumber);
             deleteStmt.executeUpdate();
             JOptionPane.showMessageDialog(null, "Record deleted successfully.");
@@ -235,7 +243,7 @@ public class user_page extends javax.swing.JFrame {
         // Close the ResultSet, PreparedStatement, and Connection
         rs.close();
         checkStmt.close();
-        con.close();  
+        connect.close();  
     } catch (SQLException | ClassNotFoundException e) {  
         JOptionPane.showMessageDialog(null, e);  
     } 

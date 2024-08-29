@@ -4,6 +4,8 @@
  */
 package college.AdminFolder;
 
+import college.AdminFolder.add_product;
+import java.awt.event.ActionEvent;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -175,68 +177,68 @@ public class product_page extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void viewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_viewActionPerformed
-    try {
-    // Establish connection  
-    Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/universityproject", "root", "");  
-    Statement statement = con.createStatement(); 
-    
-    // Step 1: Retrieve product data
-    String productQuery = "SELECT * FROM product;";
-    ResultSet productRs = statement.executeQuery(productQuery);
-    
-    // Clear table before populating
-    DefaultTableModel model = (DefaultTableModel) productstable.getModel();
-    model.setRowCount(0); // Clearing the existing rows
-    
-    // Step 2: Process each product and retrieve category name
-    while (productRs.next()) {
-        String id = productRs.getString("product_id");
-        String title = productRs.getString("product_title");
-        String description = productRs.getString("product_description");
-        String stock = productRs.getString("product_stock");
-        String keyword = productRs.getString("product_keyword");
-        String categoryId = productRs.getString("category_id");
-        String image1 = productRs.getString("product_image1");
-        String image2 = productRs.getString("product_image2");
-        String image3 = productRs.getString("product_image3");
-        String price = productRs.getString("product_price");
-        
-        // Step 2.1: Retrieve category name based on category_id
-        String category = "";
-        String categoryQuery = "SELECT category_title FROM category WHERE category_id = ?";
-        PreparedStatement categoryStmt = con.prepareStatement(categoryQuery);
-        categoryStmt.setString(1, categoryId);
-        ResultSet categoryRs = categoryStmt.executeQuery();
-        
-        if (categoryRs.next()) {
-            category = categoryRs.getString("category_title");
+
+
+    try (Connection connect = DriverManager.getConnection("jdbc:mysql://localhost:3305/universityproject", "root", "");
+         Statement s = connect.createStatement()) {
+
+        // Retrieve product data
+        String productQuery = "SELECT * FROM product;";
+        try (ResultSet productRs = s.executeQuery(productQuery)) {
+
+            // Clear table before populating
+            DefaultTableModel model = (DefaultTableModel) productstable.getModel();
+            model.setRowCount(0); // Clearing the existing rows
+
+            // Process each product and retrieve category name
+            while (productRs.next()) {
+                String id = productRs.getString("product_id");
+                String title = productRs.getString("product_title");
+                String description = productRs.getString("product_description");
+                String stock = productRs.getString("product_stock");
+                String keyword = productRs.getString("product_keywords");
+                String categoryId = productRs.getString("category_id");
+                String image1 = productRs.getString("product_image1");
+                String image2 = productRs.getString("product_image2");
+                String image3 = productRs.getString("product_image3");
+                String price = productRs.getString("product_price");
+
+                // Retrieve category name based on category_id
+                String category = "";
+                String categoryQuery = "SELECT category_title FROM category WHERE category_id = ?";
+                try (PreparedStatement categoryStmt = connect.prepareStatement(categoryQuery)) {
+                    categoryStmt.setString(1, categoryId);
+                    try (ResultSet categoryRs = categoryStmt.executeQuery()) {
+                        if (categoryRs.next()) {
+                            category = categoryRs.getString("category_title");
+                        }
+                    }
+                }
+
+                // Add row to the table model
+                model.addRow(new Object[]{id, title, description, stock, keyword, category, image1, image2, image3, price});
+            }
         }
-        
-        // Close the ResultSet and PreparedStatement for category
-        categoryRs.close();
-        categoryStmt.close();
-        
-        // Add row to the table model
-        model.addRow(new Object[] { id, title, description, stock, keyword, category, image1, image2, image3, price });
-    } 
-    
-    // Close the ResultSet and Statement for products
-    productRs.close();
-    statement.close();
-    con.close();
-} catch (SQLException ex) {
-    JOptionPane.showMessageDialog(this, "Could Not add");
-} catch (Exception e) {
-    JOptionPane.showMessageDialog(this, "Error In Connectivity");
-}
+    } catch (SQLException e) {
+        JOptionPane.showMessageDialog(this, "Error fetching data: " + e.getMessage());
+    }
+
+
 
     }//GEN-LAST:event_viewActionPerformed
 
     private void addproductActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addproductActionPerformed
-        
-        add_product new_product = new add_product();
-        new_product.setLocationRelativeTo(this);
-        new_product.setVisible(true);
+    add_product new_product = new add_product();
+    new_product.setLocationRelativeTo(this);
+    new_product.setVisible(true);
+    
+    new_product.addWindowListener(new java.awt.event.WindowAdapter() {
+        @Override
+        public void windowClosed(java.awt.event.WindowEvent evt) {
+            // Call the viewActionPerformed method of the category_page
+            viewActionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, "view"));
+        }
+    });
     }//GEN-LAST:event_addproductActionPerformed
 
     private void homepageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_homepageActionPerformed
@@ -245,41 +247,41 @@ public class product_page extends javax.swing.JFrame {
     }//GEN-LAST:event_homepageActionPerformed
 
     private void deleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteActionPerformed
-            
-        try {  
-        Class.forName("com.mysql.jdbc.Driver");  
-        // establish connection  
-        Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/universityproject", "root", "");  
 
-        // Check if the roll number exists
-        String rollNumber = jTextField1.getText();
+    String rollNumber = jTextField1.getText(); // Get the product ID to delete
+    if (rollNumber.isEmpty()) {
+        JOptionPane.showMessageDialog(this, "Please enter a product ID.");
+        return;
+    }
+
+    try (Connection connect = DriverManager.getConnection("jdbc:mysql://localhost:3305/universityproject", "root", "")) {
+        // Check if the product ID exists
         String checkQuery = "SELECT * FROM product WHERE product_id = ?";
-        PreparedStatement checkStmt = con.prepareStatement(checkQuery);
-        checkStmt.setString(1, rollNumber);
-        ResultSet rs = checkStmt.executeQuery();
-        
-        if (rs.next()) {
-            // Roll number found, proceed with delete
-            String deleteQuery = "DELETE FROM product WHERE product_id = ?";
-            PreparedStatement deleteStmt = con.prepareStatement(deleteQuery);
-            deleteStmt.setString(1, rollNumber);
-            deleteStmt.executeUpdate();
-            JOptionPane.showMessageDialog(null, "Record deleted successfully.");
-            jTextField1.setText("");
-            deleteStmt.close();
-            viewActionPerformed(null);
-        } else {
-            // Roll number not found
-            JOptionPane.showMessageDialog(null, "Cannot delete product, product number does not exist.");
+        try (PreparedStatement checkStmt = connect.prepareStatement(checkQuery)) {
+            checkStmt.setString(1, rollNumber);
+            try (ResultSet rs = checkStmt.executeQuery()) {
+                if (rs.next()) {
+                    // Product ID found, proceed with deletion
+                    String deleteQuery = "DELETE FROM product WHERE product_id = ?";
+                    try (PreparedStatement deleteStmt = connect.prepareStatement(deleteQuery)) {
+                        deleteStmt.setString(1, rollNumber);
+                        deleteStmt.executeUpdate();
+                        JOptionPane.showMessageDialog(this, "Record deleted successfully.");
+                        jTextField1.setText("");
+                    }
+                    // Refresh the table view
+                    viewActionPerformed(null);
+                } else {
+                    // Product ID not found
+                    JOptionPane.showMessageDialog(this, "Cannot delete product, product ID does not exist.");
+                }
+            }
         }
-        
-        // Close the ResultSet, PreparedStatement, and Connection
-        rs.close();
-        checkStmt.close();
-        con.close();  
-    } catch (SQLException | ClassNotFoundException e) {  
-        JOptionPane.showMessageDialog(null, e);  
-    } 
+    } catch (SQLException e) {
+        JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
+    }
+
+
         
     }//GEN-LAST:event_deleteActionPerformed
 
