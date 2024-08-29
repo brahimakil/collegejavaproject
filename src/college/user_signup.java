@@ -20,9 +20,23 @@ public class user_signup extends javax.swing.JFrame {
     /**
      * Creates new form NewJFrame
      */
-    public user_signup() {
-        initComponents();
+   public user_signup() {
+    initComponents();
+
+    try {
+        Session session = Session.getInstance();
+        if (session.getUserName() != null && session.getUserEmail() != null) {
+            // If a session exists, redirect to the Home form
+            Home homeForm = new Home();
+            homeForm.setVisible(true);
+            this.dispose(); // Close the current form
+        }
+    } catch (SQLException ex) {
+        javax.swing.JOptionPane.showMessageDialog(this, "Program is suffering. Please close it, rerun it, and then exit the app.");
+        System.exit(1); // Exit the application
     }
+}
+
 
     /**
      * This method is called from within the constructor to initialize the form.

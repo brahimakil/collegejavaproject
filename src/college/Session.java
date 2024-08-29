@@ -4,10 +4,6 @@
  */
 package college;
 
-/**
- *
- * @author ibrahim
- */
 public class Session {
     private static Session instance;
     private String userName;
@@ -40,5 +36,10 @@ public class Session {
         this.userName = null;
         this.userEmail = null;
     }
+
+    public boolean isLoggedIn() {
+        return userName != null && userEmail != null;
+    }
 }
+
 
